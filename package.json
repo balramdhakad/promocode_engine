@@ -1,0 +1,37 @@
+{
+  "name": "promocode",
+  "version": "1.0.0",
+  "description": "",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "nodemon src/server.js",
+    "db:generate":  "drizzle-kit generate",
+    "db:migrate":   "drizzle-kit migrate",
+    "db:push":      "drizzle-kit push",
+    "db:pull":      "drizzle-kit pull",
+    "db:studio":    "drizzle-kit studio",
+    "db:check":     "drizzle-kit check",
+    "db:drop":      "drizzle-kit drop"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "dependencies": {
+    "bcryptjs": "^3.0.3",
+    "dotenv": "^17.3.1",
+    "drizzle-orm": "^0.45.1",
+    "express": "^5.2.1",
+    "express-rate-limit": "^8.3.1",
+    "express-validator": "^7.3.1",
+    "ioredis": "^5.10.0",
+    "jsonwebtoken": "^9.0.3",
+    "pg": "^8.20.0",
+    "rate-limit-redis": "^4.3.1"
+  },
+  "devDependencies": {
+    "drizzle-kit": "^0.31.9",
+    "nodemon": "^3.1.14"
+  }
+}
