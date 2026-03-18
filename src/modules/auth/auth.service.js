@@ -1,11 +1,15 @@
 import authRepository from "./auth.repository.js";
 import { hashPassword, comparePassword } from "../../utils/password.js";
 import { generateToken } from "../../utils/token.js";
-import { ConflictError, UnAuthorisedError, InternalServerError } from "../../utils/errors.js";
+import {
+  ConflictError,
+  UnAuthorisedError,
+  InternalServerError,
+} from "../../utils/errors.js";
 
 export const signupService = async (username, password, email) => {
 
-  const isEmailExist = await authRepository.findUserByEmail(email);
+  const isEmailExist = await authRepository.userExistWithEmailId(email);
   if (isEmailExist) {
     throw new ConflictError("Email Already Registered");
   }
@@ -26,7 +30,7 @@ export const signupService = async (username, password, email) => {
 };
 
 export const loginService = async (email, password) => {
- 
+  
   const user = await authRepository.findUserByEmail(email);
   if (!user) {
     throw new UnAuthorisedError("Invalid Credentials");
@@ -43,9 +47,9 @@ export const loginService = async (email, password) => {
 
   return {
     user: {
-      id:       user.id,
+      id: user.id,
       username: user.username,
-      email:    user.email,
+      email: user.email,
     },
     token,
   };
@@ -53,7 +57,7 @@ export const loginService = async (email, password) => {
 
 const authService = {
   loginService,
-  signupService
-}
+  signupService,
+};
 
-export default authService
+export default authService;

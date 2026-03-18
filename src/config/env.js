@@ -12,7 +12,7 @@ const required = (key) => {
 const convertToNumber = (key) => {
   const value = process.env[key];
   const numberValue = Number(value);
-  if (isNaN(numberValue) ) {
+  if (isNaN(numberValue)) {
     throw new Error(
       `ENV Error : incorrect value to covert into Number : ${key}`,
     );
@@ -24,19 +24,25 @@ const convertToNumber = (key) => {
 const serverConfig = {
   PORT: process.env.PORT ? convertToNumber("PORT") : 5000,
   DATABASE_URL: required("DATABASE_URL"),
+  JWT_SECRET : required("JWT_SECRET"),
+  JWT_EXPIRES_IN : required("JWT_EXPIRES_IN"),
   environment:
     process.env.NODE_ENV === "production" || process.env.NODE_ENV === "prod"
       ? "production"
       : process.env.NODE_ENV === "test"
         ? "test"
         : "development",
+
+    
 };
+
+const timeZone = process.env.TIME_ZONE;
 
 const redisConfig = {
   host: required("REDIS_HOST"),
   port: required("REDIS_PORT"),
 };
 
-const env = { serverConfig, redisConfig };
+const env = { serverConfig, redisConfig, timeZone };
 
 export default env;

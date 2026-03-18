@@ -1,16 +1,19 @@
 class AppError extends Error {
-  constructor(message, statusCode, errorCode = "UNKNOWN_ERROR", details = null) {
-    super(message)
-    this.statusCode = statusCode
-    this.errorCode = errorCode
-    this.details = details
-    this.isOperational = true
+  constructor(
+    message,
+    statusCode,
+    errorCode = "UNKNOWN_ERROR",
+    details = null,
+  ) {
+    super(message);
+    this.statusCode = statusCode;
+    this.errorCode = errorCode;
+    this.details = details;
+    this.isOperational = true;
 
     Error.captureStackTrace(this, this.constructor);
-
   }
 }
-
 
 export class BadRequestError extends AppError {
   constructor(message = "Bad Request") {
@@ -48,13 +51,19 @@ export class ForbiddenError extends AppError {
 }
 export class RateLimitError extends AppError {
   constructor(message = "Too many attempts.") {
-    super(message, 429, "RATE_LIMIT_EXCEEDED")
-
+    super(message, 429, "RATE_LIMIT_EXCEEDED");
   }
 }
 export class ValidationError extends AppError {
   constructor(message = "Validation Failed", details = null) {
     super(message, 422, "VALIDATION_ERROR", details);
+  }
+}
 
+export class PromoError extends Error {
+  constructor(code, message, statusCode = 400) {
+    super(message);
+    this.code = code;
+    this.statusCode = statusCode;
   }
 }

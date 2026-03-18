@@ -1,7 +1,8 @@
 import authService from "./auth.service.js";
 import { sendResponse } from "../../utils/response.js";
+import { asyncHandler } from "../../utils/asyncHandler.js";
 
-export const loginController = async (req, res) => {
+export const loginController = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
 
   const result = await authService.loginService(email, password);
@@ -11,9 +12,9 @@ export const loginController = async (req, res) => {
     data: result,
     message: "User logged in successfully",
   });
-};
+});
 
-export const signupController = async (req, res) => {
+export const signupController = asyncHandler(async (req, res) => {
   const { email, password, username } = req.body;
 
   const result = await authService.signupService(username, password, email);
@@ -23,4 +24,4 @@ export const signupController = async (req, res) => {
     data: result,
     message: "User signed up successfully",
   });
-};
+});

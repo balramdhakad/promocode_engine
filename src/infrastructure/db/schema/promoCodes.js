@@ -6,7 +6,6 @@ import {
   integer,
   timestamp,
   uuid,
-  primaryKey,
   uniqueIndex,
 } from "drizzle-orm/pg-core";
 
@@ -18,6 +17,7 @@ import { promoValidationLogs } from "./promoValidationLogs.js";
 import { promoRedemptions } from "./promoRedemptions.js";
 import { promoUserWhitelist } from "./promoUserWhitelist.js";
 import { uuidv7 } from "../helpers/uuid.js";
+
 
 export const promoCodes = pgTable(
   "promo_codes",
