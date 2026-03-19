@@ -3,7 +3,7 @@ import { validateHandler } from "../../utils/expressValidator.js";
 
 const DISCOUNT_TYPES = ["percentage", "fixed"];
 const PROMO_TARGETS  = ["all", "new_users", "segment", "specific_users"];
-const PROMO_STATUSES = ["active", "inactive", "expired"];
+const PROMO_STATUSES = ["active", "inactive", "expired", "exhausted", "superseded"];
 
 const isHHmm = (value) => /^([01]\d|2[0-3]):[0-5]\d$/.test(value);
 

@@ -9,9 +9,8 @@ import { promoValidationLogs } from "./promoValidationLogs.js";
 
 export const users = pgTable("users", {
   id:           uuidv7(),
-  username:     varchar("username", { length: 255 }).notNull().unique(), // fixed: was "name"
+  username:     varchar("username", { length: 255 }).notNull().unique(), 
   email:        varchar("email", { length: 255 }).notNull().unique(),
-  phone:        varchar("phone", { length: 10 }).unique(),
   passwordHash: text("password_hash").notNull(),
   role:         userRoleEnum("role").default("customer").notNull(),
   status:       userStatusEnum("status").default("active").notNull(),

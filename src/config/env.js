@@ -17,7 +17,7 @@ const convertToNumber = (key) => {
       `ENV Error : incorrect value to covert into Number : ${key}`,
     );
   }
-  return value;
+  return numberValue;
 };
 
 //server configs

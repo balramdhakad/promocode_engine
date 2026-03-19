@@ -124,7 +124,6 @@ export const createNewVersion = async (tx, id, data) => {
     dailyEndTime: data.dailyEndTime ?? oldRow.dailyEndTime,
     timezone: data.timezone ?? oldRow.timezone,
     status: PROMO_STATUS.ACTIVE,
-    createdAt: new Date(),
     updatedAt: new Date(),
   };
 
@@ -149,7 +148,7 @@ export const deactivatePromo = async (db, id) => {
   return row ?? null;
 };
 
-//for corn jobs to updte status
+//for cron jobs to update status
 export const bulkExpire = async (db) => {
   const result = await db
     .update(promoCodes)
@@ -164,7 +163,7 @@ export const bulkExpire = async (db) => {
 };
 
 
-//corn job to alter admin
+//cron job to alert admin
 export const findExpiringWithin = (db, hours = 24) =>
   db.query.promoCodes.findMany({
     where: and(
@@ -173,7 +172,7 @@ export const findExpiringWithin = (db, hours = 24) =>
       gte(promoCodes.expiresAt, sql`now()`),
       lt(
         promoCodes.expiresAt,
-        sql`now() + interval '${sql.raw(String(hours))} hours'`,
+        sql`now() + (${hours} * interval '1 hour')`,
       ),
     ),
   });
@@ -203,4 +202,5 @@ export const markFirstOrderIfNeeded = (db, userId) =>
   db
     .update(users)
     .set({ firstOrderAt: new Date(), updatedAt: new Date() })
-    .where(and(eq(users.id, userId), isNull(users.firstOrderAt)));
+    .where(and(eq(users.id, userId), isNull(users.firstOrderAt)))
+    .returning();

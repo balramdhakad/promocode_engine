@@ -14,6 +14,7 @@ export const PROMO_STATUS = {
   ACTIVE: "active",
   INACTIVE: "inactive",
   EXPIRED: "expired",
+  EXHAUSTED: "exhausted",
   SUPERSEDED: "superseded",
 };
 

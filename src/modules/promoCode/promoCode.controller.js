@@ -15,7 +15,7 @@ export const createPromo = asyncHandler(async (req, res) => {
     createAllowedFieldFromBody,
   );
 
-  const userId = req.user.id
+  const userId = req.user.id;
 
   const result = await promoCodeService.createPromo(db,params,userId);
 
@@ -44,8 +44,8 @@ export const updatePromo = asyncHandler(async (req, res) => {
   });
 });
 
-export const listPromos = async (req, res) => {
-  const { status = PROMO_STATUS.ACTIVE, target, page, limit , code} = req.query;
+export const listPromos = asyncHandler(async (req, res) => {
+  const { status = PROMO_STATUS.ACTIVE, target, page, limit, code } = req.query;
 
   const { data, pagination } = await promoCodeService.listPromos(db, {
     status,
@@ -55,9 +55,8 @@ export const listPromos = async (req, res) => {
     limit: limit ? Number(limit) : 20,
   });
 
-  //rows, total: Number(total), page, limit
-  sendResponseWithPagination(res, { data , pagination });
-};
+  sendResponseWithPagination(res, { data, pagination });
+});
 
 export const getPromoById = asyncHandler(async (req, res) => {
   const { id } = req.params;

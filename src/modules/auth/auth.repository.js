@@ -1,4 +1,4 @@
-import { and, eq, SQL, sql } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 import { db } from "../../infrastructure/db/index.js";
 import { users } from "../../infrastructure/db/schema/user.js";
 
@@ -37,6 +37,9 @@ const userExistWithUserName = async (username) => {
     SELECT 1 FROM users WHERE username = ${username}
   ) AS exists`,
   );
+
+  const exists = result.rows[0].exists;
+  return exists;
 };
 
 const userExistWithEmailId = async (email) => {

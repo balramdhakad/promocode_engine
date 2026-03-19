@@ -1,4 +1,4 @@
-import { and, count, eq, desc } from "drizzle-orm";
+import { and, count, countDistinct, eq, desc } from "drizzle-orm";
 import { promoRedemptions } from "../../infrastructure/db/schema/index.js";
 
 export const logRedeem = async (db, { promoId, userId, orderId, discountApplied }) => {
@@ -65,7 +65,7 @@ export const getPromoUsageStats = async (db, promoId) => {
     .where(eq(promoRedemptions.promoId, promoId));
 
   const [{ uniqueUsers }] = await db
-    .select({ uniqueUsers: count(promoRedemptions.userId) })
+    .select({ uniqueUsers: countDistinct(promoRedemptions.userId) })
     .from(promoRedemptions)
     .where(eq(promoRedemptions.promoId, promoId));
 

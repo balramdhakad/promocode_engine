@@ -13,8 +13,6 @@ export const listRedemptions = asyncHandler(async (req, res) => {
     limit: limit ? Number(limit) : 20,
   });
 
-  console.log(pagination)
-
   sendResponseWithPagination(res, { data, pagination });
 });
 

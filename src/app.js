@@ -53,7 +53,6 @@ app.get("/health", async (req, res) => {
 app.use(globalRateLimiter);
 app.use(helmet());
 
-app.get("/health", async (req, res) => {});
 app.use("/api/v1/auth", authRoutes);
 app.use("/api/v1/promo", promoRoutes);
 app.use("/api/v1/whitelist", whitelistRoutes);
