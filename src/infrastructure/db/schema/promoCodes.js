@@ -7,10 +7,10 @@ import {
   timestamp,
   uuid,
   uniqueIndex,
+  index,
 } from "drizzle-orm/pg-core";
 
 import { relations, sql } from "drizzle-orm";
-import { index } from "drizzle-orm/gel-core";
 import { discountTypeEnum, promoStatusEnum, promoTargetEnum } from "./enum.js";
 import { users } from "./user.js";
 import { promoValidationLogs } from "./promoValidationLogs.js";
@@ -18,12 +18,11 @@ import { promoRedemptions } from "./promoRedemptions.js";
 import { promoUserWhitelist } from "./promoUserWhitelist.js";
 import { uuidv7 } from "../helpers/uuid.js";
 
-
 export const promoCodes = pgTable(
   "promo_codes",
   {
     id: uuidv7(),
-    code: varchar("code", { length: 50 }).notNull().unique(),
+    code: varchar("code", { length: 50 }).notNull(),
 
     description: text("description"),
 
@@ -44,50 +43,48 @@ export const promoCodes = pgTable(
       scale: 2,
     })
       .notNull()
-      .default(0),
+      .default("0"),
 
     target: promoTargetEnum("target").default("all").notNull(),
     targetSegment: varchar("target_segment", { length: 100 }),
 
-    //null = unlimited
     maxUsageGlobal: integer("max_usage_global"),
     maxUsagePerUser: integer("max_usage_per_user"),
 
     status: promoStatusEnum("status").default("active").notNull(),
-    //full timestamp with date
     startsAt: timestamp("starts_at").defaultNow().notNull(),
-    //null = alive until deactivate
     expiresAt: timestamp("expires_at"),
 
-    // "19:00" (HH:mm) - example this promocode valid from 7-11 pm daily null = no time ristriction
     dailyStartTime: varchar("daily_start_time", { length: 5 }),
     dailyEndTime: varchar("daily_end_time", { length: 5 }),
     timezone: varchar("timezone", { length: 50 }).default("Asia/Kolkata"),
 
-    createdBy: uuid("created_by"),
+    createdBy: uuid("created_by").references(() => users.id, {
+      onDelete: "set null",
+    }),
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at").defaultNow().notNull(),
   },
   (t) => [
-    //most frequent query by user currently active code with current order value
-    index("idx_promo_codes_active_min_discount_isactive")
-      .on(t.discountValue, t.startsAt)
-      .where(sql`status = 'active' AND expires_at > now()`),
+    uniqueIndex("idx_promo_codes_one_active_per_code")
+      .on(t.code)
+      .where(sql`status = 'active'`),
 
-    index("idx_promo_codes_active_codes").on(t.status),
+    index("idx_promo_codes_status").on(t.status),
 
-    //for corn jobs to update status to exprire if expiresAt exceed
-    index("idx_promo_codes_going_to_expire").on(t.expiresAt),
+    index("idx_promo_codes_expires_at").on(t.expiresAt),
 
-    uniqueIndex("idx_promo_codes_code").on(t.code),
+    index("idx_promo_codes_code").on(t.code),
+
   ],
 );
 
 export const promoCodesRelations = relations(promoCodes, ({ one, many }) => ({
-  createdBy: one(users, {
+  creator: one(users, {
     fields: [promoCodes.createdBy],
     references: [users.id],
   }),
+
   whitelist: many(promoUserWhitelist),
   redemptions: many(promoRedemptions),
   validationLogs: many(promoValidationLogs),

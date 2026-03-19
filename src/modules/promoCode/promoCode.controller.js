@@ -5,14 +5,14 @@ import {
   sendResponseWithPagination,
 } from "../../utils/response.js";
 import { requestBodyExtractor } from "./helper.js";
-import { createAndUpdateAllowedFieldFromBody } from "./PromoCode.constants.js";
+import { createAllowedFieldFromBody, PROMO_STATUS, UpdateAllowedFieldFromBody } from "./PromoCode.constants.js";
 import * as promoCodeService from "./promoCode.service.js";
 
 export const createPromo = asyncHandler(async (req, res) => {
 
   const params = requestBodyExtractor(
     req.body,
-    createAndUpdateAllowedFieldFromBody,
+    createAllowedFieldFromBody,
   );
 
   const userId = req.user.id
@@ -33,7 +33,7 @@ export const updatePromo = asyncHandler(async (req, res) => {
 
   const params = requestBodyExtractor(
     req.body,
-    createAndUpdateAllowedFieldFromBody,
+    UpdateAllowedFieldFromBody,
   );
 
   const newVersion = await promoCodeService.updatePromo(db, id, params, userId);
@@ -45,7 +45,7 @@ export const updatePromo = asyncHandler(async (req, res) => {
 });
 
 export const listPromos = async (req, res) => {
-  const { status, target, page, limit, includeSuperseded , code} = req.query;
+  const { status = PROMO_STATUS.ACTIVE, target, page, limit , code} = req.query;
 
   const { data, pagination } = await promoCodeService.listPromos(db, {
     status,
@@ -53,7 +53,6 @@ export const listPromos = async (req, res) => {
     code,
     page: page ? Number(page) : 1,
     limit: limit ? Number(limit) : 20,
-    includeSuperseded: includeSuperseded === "true",
   });
 
   //rows, total: Number(total), page, limit
@@ -90,4 +89,17 @@ export const deActivatePromo = asyncHandler(async (req, res) => {
     message: "Promocode Deleted",
     data: promo,
   });
+});
+
+
+export const validatePromoCode = asyncHandler(async (req, res) => {
+  const { code, orderValue } = req.body;
+
+  const result = await promoCodeService.validatePromoCode(db, {
+    code,
+    userId: req.user.id,
+    orderValue: Number(orderValue),
+  });
+
+  sendResponse(res, { message: "Promo code is valid.", data: result });
 });

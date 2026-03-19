@@ -1,5 +1,12 @@
 import { Router } from "express";
-import { createPromoCodeValidator, updatePromoCodeValidator } from "./promoCodeValidator.js";
+import {
+  applyPromoCodeValidator,
+  createPromoCodeValidator,
+  updatePromoCodeValidator,
+  promoIdParamValidator,
+  versionHistoryValidator,
+  listPromosValidator,
+} from "./promoCodeValidator.js";
 import {
   createPromo,
   deActivatePromo,
@@ -7,6 +14,7 @@ import {
   getVersionHistory,
   listPromos,
   updatePromo,
+  validatePromoCode,
 } from "./promoCode.controller.js";
 import { authMiddleware } from "../../middlewares/authMiddleware.js";
 
@@ -19,16 +27,25 @@ router.post(
   createPromo,
 );
 
-router.get("/", authMiddleware(["admin"]), listPromos);
-router.get("/:id", authMiddleware(["admin"]), getPromoById);
+router.get("/", authMiddleware(["admin"]), listPromosValidator, listPromos);
+router.get("/:id", authMiddleware(["admin"]), promoIdParamValidator, getPromoById);
+
 router.patch(
   "/:id",
-   authMiddleware(["admin"]),
+  authMiddleware(["admin"]),
   updatePromoCodeValidator,
   updatePromo,
 );
-router.delete("/:id", authMiddleware(["admin"]), deActivatePromo);
 
-router.get("/:code/history", authMiddleware(["admin"]), getVersionHistory);
+router.delete("/:id", authMiddleware(["admin"]), promoIdParamValidator, deActivatePromo);
+
+router.get("/:code/history", authMiddleware(["admin"]), versionHistoryValidator, getVersionHistory);
+
+router.post(
+  "/validate",
+  authMiddleware(["customer", "admin"]),
+  applyPromoCodeValidator,
+  validatePromoCode,
+);
 
 export default router;

@@ -1,11 +1,16 @@
-
-import { eq, sql, and, lt, gt, gte, isNull, isNotNull, or, count } from "drizzle-orm";
-import { promoCodes } from "../../infrastructure/db/schema/index.js";
-import { promoUserWhitelist } from "../../infrastructure/db/schema/index.js";
-import { promoRedemptions } from "../../infrastructure/db/schema/index.js";
-import { promoValidationLogs } from "../../infrastructure/db/schema/index.js";
+import {
+  eq,
+  sql,
+  and,
+  lt,
+  gte,
+  isNull,
+  isNotNull,
+  or,
+  count,
+} from "drizzle-orm";
+import { promoCodes, users, promoValidationLogs } from "../../infrastructure/db/schema/index.js";
 import { PROMO_STATUS } from "./PromoCode.constants.js";
-
 
 export const findByCode = (db, code) =>
   db.query.promoCodes.findFirst({
@@ -17,29 +22,42 @@ export const findActiveByCode = (db, code) =>
     where: and(
       eq(promoCodes.code, code),
       eq(promoCodes.status, PROMO_STATUS.ACTIVE),
-      isNull(promoCodes.supersededBy),
-      or(
-        isNull(promoCodes.expiresAt),
-        gt(promoCodes.expiresAt, sql`now()`),
-      ),
+      or(isNull(promoCodes.expiresAt), gte(promoCodes.expiresAt, sql`now()`)),
     ),
   });
 
-
 export const findById = (db, id) =>
   db.query.promoCodes.findFirst({
-    where: eq(promoCodes.id, id),
+    where: and(
+      eq(promoCodes.id, id),
+      eq(promoCodes.status, PROMO_STATUS.ACTIVE),
+    ),
   });
-
 
 export const findCurrentVersionById = (db, id) =>
   db.query.promoCodes.findFirst({
     where: and(
       eq(promoCodes.id, id),
-      isNull(promoCodes.supersededBy),
+      eq(promoCodes.status, PROMO_STATUS.ACTIVE),
     ),
+    columns: {
+      code: true,
+      description: true,
+      discountType: true,
+      discountValue: true,
+      maxDiscountAmount: true,
+      minOrderValue: true,
+      target: true,
+      targetSegment: true,
+      maxUsageGlobal: true,
+      maxUsagePerUser: true,
+      startsAt: true,
+      expiresAt: true,
+      dailyStartTime: true,
+      dailyEndTime: true,
+      timezone: true,
+    },
   });
-
 
 export const findVersionHistory = (db, code) =>
   db.query.promoCodes.findMany({
@@ -47,19 +65,7 @@ export const findVersionHistory = (db, code) =>
     orderBy: (t, { asc }) => [asc(t.createdAt)],
   });
 
-
-export const listPromos = async (db, filters = {}) => {
-  const { status, target,code, page = 1, limit = 20, includeSuperseded = false } = filters;
-
-  const conditions = [];
-  if(search) conditions.push(eq(promoCodes.code, code))
-  if (status) conditions.push(eq(promoCodes.status, status));
-  if (target) conditions.push(eq(promoCodes.target, target));
-  if (!includeSuperseded) conditions.push(isNull(promoCodes.supersededBy));
-
-  const where = conditions.length > 0 ? and(...conditions) : undefined;
-  const offset = (page - 1) * limit;
-
+export const listPromos = async (db, { where, limit, offset, page }) => {
   const [rows, [{ total }]] = await Promise.all([
     db.query.promoCodes.findMany({
       where,
@@ -70,46 +76,64 @@ export const listPromos = async (db, filters = {}) => {
     db.select({ total: count() }).from(promoCodes).where(where),
   ]);
 
-  return { rows, total: Number(total), page, limit };
+  return {
+    data: rows || [],
+    pagination: { total: Number(total), page, limit },
+  };
 };
 
-
 export const createPromo = async (db, data) => {
-    console.log(data)
   const [row] = await db.insert(promoCodes).values(data).returning();
   return row;
 };
 
+export const createNewVersion = async (tx, id, data) => {
+  const [oldRow] = await tx
+    .update(promoCodes)
+    .set({
+      status: PROMO_STATUS.SUPERSEDED,
+      updatedAt: new Date(),
+    })
+    .where(
+      and(
+        eq(promoCodes.id, id),
+        or(
+          eq(promoCodes.status, PROMO_STATUS.ACTIVE),
+          eq(promoCodes.status, PROMO_STATUS.EXPIRED),
+        ),
+      ),
+    )
+    .returning();
 
-export const createNewVersion = async (tx, oldRow, updateData) => {
+  if (!oldRow) return null;
 
-  const {
-    id: _id,
-    createdAt: _ca,
-    updatedAt: _ua,
-    supersededBy: _sb,
-    ...rowData
-  } = oldRow;
+  const updatedField = {
+    code: oldRow.code,
+    description: data.description ?? oldRow.description,
+    discountType: data.discountType ?? oldRow.discountType,
+    discountValue: data.discountValue ?? oldRow.discountValue,
+    maxDiscountAmount: data.maxDiscountAmount ?? oldRow.maxDiscountAmount,
+    minOrderValue: data.minOrderValue ?? oldRow.minOrderValue,
+    target: data.target ?? oldRow.target,
+    targetSegment: data.targetSegment ?? oldRow.targetSegment,
+    maxUsageGlobal: data.maxUsageGlobal ?? oldRow.maxUsageGlobal,
+    maxUsagePerUser: data.maxUsagePerUser ?? oldRow.maxUsagePerUser,
+    expiresAt: data.expiresAt ?? oldRow.expiresAt,
+    startsAt: data.startsAt ?? oldRow.startsAt,
+    dailyStartTime: data.dailyStartTime ?? oldRow.dailyStartTime,
+    dailyEndTime: data.dailyEndTime ?? oldRow.dailyEndTime,
+    timezone: data.timezone ?? oldRow.timezone,
+    status: PROMO_STATUS.ACTIVE,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  };
 
   const [newRow] = await tx
     .insert(promoCodes)
     .values({
-      ...rowData,      
-      ...updateData,   
-      supersededBy: null,
-      createdAt: new Date(),
-      updatedAt: new Date(),
+      ...updatedField,
     })
     .returning();
-
-  await tx
-    .update(promoCodes)
-    .set({
-      status: PROMO_STATUS.SUPERSEDED,
-      supersededBy: newRow.id,
-      updatedAt: new Date(),
-    })
-    .where(eq(promoCodes.id, oldRow.id));
 
   return newRow;
 };
@@ -119,16 +143,13 @@ export const deactivatePromo = async (db, id) => {
     .update(promoCodes)
     .set({ status: PROMO_STATUS.INACTIVE, updatedAt: new Date() })
     .where(
-      and(
-        eq(promoCodes.id, id),
-        isNull(promoCodes.supersededBy),
-      ),
+      and(eq(promoCodes.id, id), eq(promoCodes.status, PROMO_STATUS.ACTIVE)),
     )
     .returning();
   return row ?? null;
 };
 
-
+//for corn jobs to updte status
 export const bulkExpire = async (db) => {
   const result = await db
     .update(promoCodes)
@@ -136,7 +157,6 @@ export const bulkExpire = async (db) => {
     .where(
       and(
         eq(promoCodes.status, PROMO_STATUS.ACTIVE),
-        isNull(promoCodes.supersededBy),
         lt(promoCodes.expiresAt, sql`now()`),
       ),
     );
@@ -144,100 +164,43 @@ export const bulkExpire = async (db) => {
 };
 
 
+//corn job to alter admin
 export const findExpiringWithin = (db, hours = 24) =>
   db.query.promoCodes.findMany({
     where: and(
       eq(promoCodes.status, PROMO_STATUS.ACTIVE),
-      isNull(promoCodes.supersededBy),
       isNotNull(promoCodes.expiresAt),
       gte(promoCodes.expiresAt, sql`now()`),
-      lt(promoCodes.expiresAt, sql`now() + interval '${sql.raw(String(hours))} hours'`),
-    ),
-  });
-
-
-export const isUserWhitelisted = async (db, promoId, userId) => {
-  const row = await db.query.promoUserWhitelist.findFirst({
-    where: and(
-      eq(promoUserWhitelist.promoId, promoId),
-      eq(promoUserWhitelist.userId, userId),
-    ),
-  });
-  return Boolean(row);
-};
-
-export const addWhitelistUser = async (db, promoId, userId) => {
-  const [row] = await db
-    .insert(promoUserWhitelist)
-    .values({ promoId, userId })
-    .onConflictDoNothing()
-    .returning();
-  return row;
-};
-
-export const removeWhitelistUser = async (db, promoId, userId) => {
-  const [row] = await db
-    .delete(promoUserWhitelist)
-    .where(
-      and(
-        eq(promoUserWhitelist.promoId, promoId),
-        eq(promoUserWhitelist.userId, userId),
+      lt(
+        promoCodes.expiresAt,
+        sql`now() + interval '${sql.raw(String(hours))} hours'`,
       ),
-    )
-    .returning();
-  return row;
-};
-
-export const listWhitelistUsers = (db, promoId) =>
-  db.query.promoUserWhitelist.findMany({
-    where: eq(promoUserWhitelist.promoId, promoId),
-    with: { user: { columns: { id: true, username: true, email: true } } },
-  });
-
-export const getGlobalRedeemCount = async (db, promoId) => {
-  const [{ total }] = await db
-    .select({ total: count() })
-    .from(promoRedemptions)
-    .where(eq(promoRedemptions.promoId, promoId));
-  return Number(total);
-};
-
-export const getUserRedeemCount = async (db, promoId, userId) => {
-  const [{ total }] = await db
-    .select({ total: count() })
-    .from(promoRedemptions)
-    .where(
-      and(
-        eq(promoRedemptions.promoId, promoId),
-        eq(promoRedemptions.userId, userId),
-      ),
-    );
-  return Number(total);
-};
-
-export const hasOrderBeenRedeemed = async (db, promoId, orderId) => {
-  const row = await db.query.promoRedemptions.findFirst({
-    where: and(
-      eq(promoRedemptions.promoId, promoId),
-      eq(promoRedemptions.orderId, orderId),
     ),
   });
-  return row ?? null;
-};
-
-export const logRedeem = async (db, { promoId, userId, orderId, discountApplied }) => {
-  const [row] = await db
-    .insert(promoRedemptions)
-    .values({ promoId, userId, orderId, discountApplied })
-    .returning();
-  return row;
-};
 
 export const logValidation = async (db, payload) => {
+  let { userId, code, orderAmount, isValid , promoId, failReason } = payload;
+
   const [row] = await db
     .insert(promoValidationLogs)
-    .values(payload)
+    .values({userId, code, orderAmount, isValid, promoId, failReason})
     .returning();
   return row;
 };
 
+//find user Details
+export const findUserById = (db, userId) =>
+  db.query.users.findFirst({
+    where: eq(users.id, userId),
+    columns: {
+      id: true,
+      segment: true,
+      firstOrderAt: true,
+    },
+  });
+
+export const markFirstOrderIfNeeded = (db, userId) =>
+  db
+    .update(users)
+    .set({ firstOrderAt: new Date(), updatedAt: new Date() })
+    .where(and(eq(users.id, userId), isNull(users.firstOrderAt)));

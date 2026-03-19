@@ -2,7 +2,7 @@ import {
   pgTable,primaryKey,unique,uuid
 } from "drizzle-orm/pg-core";
 
-import { index } from "drizzle-orm/gel-core";
+import { index } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 import { users } from "./user.js";
 import { promoCodes } from "./promoCodes.js";

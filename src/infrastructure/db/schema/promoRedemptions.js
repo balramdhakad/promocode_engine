@@ -7,7 +7,7 @@ import {
 } from "drizzle-orm/pg-core";
 
 import { relations } from "drizzle-orm";
-import { index } from "drizzle-orm/gel-core";
+import { index } from "drizzle-orm/pg-core";
 import { users } from "./user.js";
 import { promoCodes } from "./promoCodes.js";
 import { uuidv7 } from "../helpers/uuid.js";

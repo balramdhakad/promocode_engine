@@ -8,7 +8,7 @@ export const userStatusEnum = pgEnum("user_status", [
   "banned",
 ]);
 
-export const discountTypeEnum = pgEnum("discount_type", ["percentage", "flat"]);
+export const discountTypeEnum = pgEnum("discount_type", ["percentage", "fixed"]);
 
 export const promoStatusEnum = pgEnum("promo_status", [
   "active",

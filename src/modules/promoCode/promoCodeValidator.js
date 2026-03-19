@@ -1,8 +1,8 @@
-import { body, param } from "express-validator";
+import { body, param, query } from "express-validator";
 import { validateHandler } from "../../utils/expressValidator.js";
 
 const DISCOUNT_TYPES = ["percentage", "fixed"];
-const PROMO_TARGETS  = ["all", "new_users", "segment", "whitelist"];
+const PROMO_TARGETS  = ["all", "new_users", "segment", "specific_users"];
 const PROMO_STATUSES = ["active", "inactive", "expired"];
 
 const isHHmm = (value) => /^([01]\d|2[0-3]):[0-5]\d$/.test(value);
@@ -165,6 +165,46 @@ export const createPromoCodeValidator = [
 export const updatePromoCodeValidator = [
   param("id").isUUID().withMessage("Promo code ID must be a valid UUID."),
   ...makeOptional(getPromoValidatorChain()),
+  validateHandler,
+];
+
+export const promoIdParamValidator = [
+  param("id").isUUID().withMessage("Promo ID must be a valid UUID."),
+  validateHandler,
+];
+
+export const versionHistoryValidator = [
+  param("code")
+    .notEmpty()
+    .withMessage("Code is required.")
+    .isLength({ max: 50 })
+    .withMessage("Code must be at most 50 characters.")
+    .matches(/^[A-Z0-9]+$/i)
+    .withMessage("Code may only contain letters and numbers."),
+  validateHandler,
+];
+
+export const listPromosValidator = [
+  query("status")
+    .optional()
+    .isIn(PROMO_STATUSES)
+    .withMessage(`status must be one of: ${PROMO_STATUSES.join(", ")}.`),
+  query("target")
+    .optional()
+    .isIn(PROMO_TARGETS)
+    .withMessage(`target must be one of: ${PROMO_TARGETS.join(", ")}.`),
+  query("code")
+    .optional()
+    .isLength({ max: 50 })
+    .withMessage("code must be at most 50 characters."),
+  query("page")
+    .optional()
+    .isInt({ min: 1 })
+    .withMessage("page must be a positive integer."),
+  query("limit")
+    .optional()
+    .isInt({ min: 1, max: 100 })
+    .withMessage("limit must be between 1 and 100."),
   validateHandler,
 ];
 

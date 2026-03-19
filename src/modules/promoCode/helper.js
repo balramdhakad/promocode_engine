@@ -1,10 +1,15 @@
 export const requestBodyExtractor = (incomingObj, allowedFields) => {
-  let params = {};
-  for (let field of allowedFields) {
-    if (incomingObj[field]) {
+  const params = {};
+  for (const field of allowedFields) {
+    if (
+      Object.prototype.hasOwnProperty.call(incomingObj, field) &&
+      incomingObj[field] !== undefined
+    ) {
       params[field] = incomingObj[field];
     }
   }
 
-  return params
+  return params;
 };
+
+export const toDate = (value) => (value ? new Date(value) : undefined);

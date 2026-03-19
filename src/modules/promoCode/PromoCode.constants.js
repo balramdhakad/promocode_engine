@@ -7,7 +7,7 @@ export const PROMO_TARGET = {
   ALL: "all",
   NEW_USERS: "new_users",
   SEGMENT: "segment",
-  WHITELIST: "whitelist",
+  WHITELIST: "specific_users",
 };
 
 export const PROMO_STATUS = {
@@ -37,11 +37,9 @@ export const PROMO_ERROR = {
   CONFLICT: "PROMO_CODE_CONFLICT",
 };
 
-export const IMMUTABLE_FIELDS = [
-  "code",
-];
+export const IMMUTABLE_FIELDS = ["code"];
 
-export const createAndUpdateAllowedFieldFromBody = [
+export const createAllowedFieldFromBody = [
   "code",
   "description",
   "discountType",
@@ -58,3 +56,7 @@ export const createAndUpdateAllowedFieldFromBody = [
   "dailyEndTime",
   "timezone",
 ];
+
+export const UpdateAllowedFieldFromBody = createAllowedFieldFromBody.filter(
+  (item) => item !== "code",
+);
