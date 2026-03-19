@@ -26,6 +26,7 @@ const serverConfig = {
   DATABASE_URL: required("DATABASE_URL"),
   JWT_SECRET : required("JWT_SECRET"),
   JWT_EXPIRES_IN : required("JWT_EXPIRES_IN"),
+  FRONTEND_URL :  process.env.FRONTEND_URL,
   environment:
     process.env.NODE_ENV === "production" || process.env.NODE_ENV === "prod"
       ? "production"

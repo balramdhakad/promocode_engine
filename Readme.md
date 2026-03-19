@@ -32,7 +32,8 @@ TIME_ZONE = "Asia/Kolkata"
 JWT_SECRET = nbptihrio4390yt5uyh430t34ti9gii94feoirjveoikvgvdf
 JWT_EXPIRES_IN = '1d'
 ```
-<!-- create DATABASE_URL from values like POSTGRES_USER, POSTGRES_PASSWORD, POSTGRES_DB, POSTGRES_PORT 
+
+<!-- create DATABASE_URL from values like POSTGRES_USER, POSTGRES_PASSWORD, POSTGRES_DB, POSTGRES_PORT
 `postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@localhost:${POSTGRES_PORT}/
 ${POSTGRES_DB}`
 -->
@@ -43,7 +44,7 @@ ${POSTGRES_DB}`
 docker-compose up -d
 ```
 
-Give it a few seconds, then run `docker ps` to confirm `postgres-forms` and `redis-forms` shows as `healthy`. If something looks off, `docker logs postgres-forms` will tell you why.
+Give it a few seconds, then run `docker ps` to confirm `postgres-promocode` and `redis-promocode` shows as `healthy`. If something looks off, `docker logs postgres-promocode` will tell you why.
 
 ## 4. Install packages
 
@@ -67,4 +68,4 @@ Open a new terminal and hit the health endpoint:
 curl http://localhost:8080/health
 ```
 
-If you see `"status": "OK"` and `"postgres": "connected"` you're good to go.
+If you see `"status": "OK"` and `"postgres": "connected"` `"redis": "connected"` you're good to go.
