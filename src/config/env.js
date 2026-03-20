@@ -41,7 +41,7 @@ const timeZone = process.env.TIME_ZONE;
 
 const redisConfig = {
   host: required("REDIS_HOST"),
-  port: required("REDIS_PORT"),
+  port: process.env.REDIS_PORT ? convertToNumber("REDIS_PORT") : 6379,
 };
 
 const env = { serverConfig, redisConfig, timeZone };

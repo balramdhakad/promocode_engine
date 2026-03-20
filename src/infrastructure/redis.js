@@ -12,7 +12,6 @@ const defaultOptions = {
   },
   maxRetriesPerRequest: 3,
   enableReadyCheck: true,
-  lazyConnect: true,
 };
 
 export const redis = new Redis(defaultOptions);
@@ -28,4 +27,5 @@ redis.on("error", (error) => {
 redis.on("close", () => {
   console.error(`Redis Connection Closed`);
 });
+
 

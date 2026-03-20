@@ -10,6 +10,12 @@ export const listRedemptionsValidator = [
     .optional()
     .isUUID()
     .withMessage("userId must be a valid UUID."),
+  query("code")
+    .optional()
+    .isLength({ max: 50 })
+    .withMessage("code must be at most 50 characters.")
+    .matches(/^[A-Z0-9]+$/i)
+    .withMessage("code may only contain letters and numbers."),
   query("page")
     .optional()
     .isInt({ min: 1 })
@@ -22,6 +28,12 @@ export const listRedemptionsValidator = [
 ];
 
 export const promoUsageStatsValidator = [
-  param("promoId").isUUID().withMessage("promoId must be a valid UUID."),
+  param("code")
+    .notEmpty()
+    .withMessage("code is required.")
+    .isLength({ max: 50 })
+    .withMessage("code must be at most 50 characters.")
+    .matches(/^[A-Z0-9]+$/i)
+    .withMessage("code may only contain letters and numbers."),
   validateHandler,
 ];

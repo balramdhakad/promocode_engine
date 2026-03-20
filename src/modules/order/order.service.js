@@ -26,6 +26,7 @@ export const placeOrder = async (db, { userId, orderAmount, promoCode }) => {
     if (promoResult) {
       await redemptionRepo.logRedeem(tx, {
         promoId: promoResult.promoId,
+        code: promoCode,
         userId,
         orderId,
         discountApplied: discountAmount,

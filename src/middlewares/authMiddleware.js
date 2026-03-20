@@ -32,7 +32,7 @@ export const authMiddleware = (allowedRoles = []) => {
 
       if (allowedRoles.length > 0) {
         if (!allowedRoles.includes(user.role)) {
-          throw new ForbiddenError("Access Denied");
+          return next(new ForbiddenError("Access Denied"));
         }
       }
 

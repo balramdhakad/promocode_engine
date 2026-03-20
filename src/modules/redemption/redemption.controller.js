@@ -4,22 +4,23 @@ import { sendResponse, sendResponseWithPagination } from "../../utils/response.j
 import * as redemptionService from "./redemption.service.js";
 
 export const listRedemptions = asyncHandler(async (req, res) => {
-  const { promoId, userId, page=1, limit=20 } = req.query;
+  const { promoId, userId, code, page = 1, limit = 20 } = req.query;
 
   const { data, pagination } = await redemptionService.listRedemptions(db, {
     promoId,
     userId,
-    page: page ? Number(page) : 1,
-    limit: limit ? Number(limit) : 20,
+    code,
+    page: Number(page),
+    limit: Number(limit),
   });
 
   sendResponseWithPagination(res, { data, pagination });
 });
 
 export const getPromoUsageStats = asyncHandler(async (req, res) => {
-  const { promoId } = req.params;
+  const { code } = req.params;
 
-  const stats = await redemptionService.getPromoUsageStats(db, promoId);
+  const stats = await redemptionService.getPromoUsageStats(db, code);
 
   sendResponse(res, { message: "Usage stats fetched.", data: stats });
 });

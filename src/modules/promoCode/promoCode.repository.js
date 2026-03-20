@@ -1,15 +1,9 @@
+import {eq,sql,and, lt, gte,isNull,isNotNull, or,count} from "drizzle-orm";
 import {
-  eq,
-  sql,
-  and,
-  lt,
-  gte,
-  isNull,
-  isNotNull,
-  or,
-  count,
-} from "drizzle-orm";
-import { promoCodes, users, promoValidationLogs } from "../../infrastructure/db/schema/index.js";
+  promoCodes,
+  users,
+  promoValidationLogs,
+} from "../../infrastructure/db/schema/index.js";
 import { PROMO_STATUS } from "./PromoCode.constants.js";
 
 export const findByCode = (db, code) =>
@@ -32,6 +26,10 @@ export const findById = (db, id) =>
       eq(promoCodes.id, id),
       eq(promoCodes.status, PROMO_STATUS.ACTIVE),
     ),
+  });
+export const findByIdAny = (db, id) =>
+  db.query.promoCodes.findFirst({
+    where: and(eq(promoCodes.id, id)),
   });
 
 export const findCurrentVersionById = (db, id) =>
@@ -125,6 +123,7 @@ export const createNewVersion = async (tx, id, data) => {
     timezone: data.timezone ?? oldRow.timezone,
     status: PROMO_STATUS.ACTIVE,
     updatedAt: new Date(),
+    createdBy: data.createdBy,
   };
 
   const [newRow] = await tx
@@ -148,41 +147,15 @@ export const deactivatePromo = async (db, id) => {
   return row ?? null;
 };
 
-//for cron jobs to update status
-export const bulkExpire = async (db) => {
-  const result = await db
-    .update(promoCodes)
-    .set({ status: PROMO_STATUS.EXPIRED, updatedAt: new Date() })
-    .where(
-      and(
-        eq(promoCodes.status, PROMO_STATUS.ACTIVE),
-        lt(promoCodes.expiresAt, sql`now()`),
-      ),
-    );
-  return result.rowCount ?? 0;
-};
 
 
-//cron job to alert admin
-export const findExpiringWithin = (db, hours = 24) =>
-  db.query.promoCodes.findMany({
-    where: and(
-      eq(promoCodes.status, PROMO_STATUS.ACTIVE),
-      isNotNull(promoCodes.expiresAt),
-      gte(promoCodes.expiresAt, sql`now()`),
-      lt(
-        promoCodes.expiresAt,
-        sql`now() + (${hours} * interval '1 hour')`,
-      ),
-    ),
-  });
 
 export const logValidation = async (db, payload) => {
-  let { userId, code, orderAmount, isValid , promoId, failReason } = payload;
+  let { userId, code, orderAmount, isValid, promoId, failReason } = payload;
 
   const [row] = await db
     .insert(promoValidationLogs)
-    .values({userId, code, orderAmount, isValid, promoId, failReason})
+    .values({ userId, code, orderAmount, isValid, promoId, failReason })
     .returning();
   return row;
 };

@@ -17,8 +17,9 @@ import { and, count, eq } from "drizzle-orm";
 import { promoCodes } from "../../infrastructure/db/schema/promoCodes.js";
 import { toDate } from "./helper.js";
 import { validatePromo } from "./PromoValidationEngine.js";
+import env from "../../config/env.js";
 
-export const createPromo = async (db, data, adminId) => {
+export const createPromo = async (db, data, userId) => {
   const existing = await repo.findByCode(db, data.code);
   if (existing) {
     throw new ConflictError(
@@ -30,7 +31,8 @@ export const createPromo = async (db, data, adminId) => {
     ...data,
     startsAt: toDate(data.startsAt),
     expiresAt: toDate(data.expiresAt),
-    createdBy: adminId,
+    timezone: data.timezone ?? env.timeZone,
+    createdBy: userId,
   });
 
   return promo;
@@ -49,12 +51,9 @@ export const deActivatePromo = async (db, id) => {
   const promo = await repo.findById(db, id);
 
   if (!promo) {
-    throw new NotFoundError("Promo code not found.");
+    throw new NotFoundError("Promo code not found or already deactivated.");
   }
 
-  if (promo.status !== PROMO_STATUS.ACTIVE) {
-    throw new BadRequestError("Promo code is already deactivated.");
-  }
 
   const updated = await repo.deactivatePromo(db, id);
 
@@ -82,7 +81,7 @@ export const listPromos = async (db, filters = {}) => {
   return result;
 };
 
-export const updatePromo = async (db, id, data, adminId) => {
+export const updatePromo = async (db, id, data, userId) => {
   if (Object.keys(data).length === 0) {
     throw new BadRequestError("No updatable fields provided.");
   }
@@ -92,7 +91,7 @@ export const updatePromo = async (db, id, data, adminId) => {
       ...data,
       startsAt: data.startsAt ? toDate(data.startsAt) : undefined,
       expiresAt: data.expiresAt ? toDate(data.expiresAt) : undefined,
-      createdBy: adminId,
+      createdBy: userId,
     });
   });
 
@@ -137,8 +136,8 @@ export const validatePromoCode = async (db, { code, userId, orderValue }) => {
         : null;
 
     const [globalCount, userCount, isWhitelisted] = await Promise.all([
-      promo.maxUsageGlobal ? redemptionRepo.getGlobalRedeemCount(db, promo.id) : 0,
-      promo.maxUsagePerUser ? redemptionRepo.getUserRedeemCount(db, promo.id, userId) : 0,
+      promo.maxUsageGlobal ? redemptionRepo.getGlobalRedeemCount(db, promo.code) : 0,
+      promo.maxUsagePerUser ? redemptionRepo.getUserRedeemCount(db, promo.code, userId) : 0,
       promo.target === PROMO_TARGET.WHITELIST
         ? whitelistRepo.isUserWhitelisted(db, promo.id, userId)
         : false,
@@ -156,7 +155,7 @@ export const validatePromoCode = async (db, { code, userId, orderValue }) => {
 
     await repo.logValidation(db, {
       ...logPayload,
-      isValid:true,
+      isValid:result.valid,
       failReason: null,
     });
 

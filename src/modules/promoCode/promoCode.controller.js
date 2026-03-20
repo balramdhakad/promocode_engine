@@ -50,6 +50,7 @@ export const listPromos = asyncHandler(async (req, res) => {
   const { data, pagination } = await promoCodeService.listPromos(db, {
     status,
     target,
+    
     code,
     page: page ? Number(page) : 1,
     limit: limit ? Number(limit) : 20,

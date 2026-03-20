@@ -1,10 +1,10 @@
 import { and, count, countDistinct, eq, desc } from "drizzle-orm";
-import { promoRedemptions } from "../../infrastructure/db/schema/index.js";
+import { promoRedemptions, promoCodes } from "../../infrastructure/db/schema/index.js";
 
-export const logRedeem = async (db, { promoId, userId, orderId, discountApplied }) => {
+export const logRedeem = async (db, { promoId, code, userId, orderId, discountApplied }) => {
   const [row] = await db
     .insert(promoRedemptions)
-    .values({ promoId, userId, orderId, discountApplied })
+    .values({ promoId, code, userId, orderId, discountApplied })
     .returning();
   return row;
 };
@@ -16,21 +16,21 @@ export const hasOrderBeenRedeemed = async (db, orderId) => {
   return row ?? null;
 };
 
-export const getGlobalRedeemCount = async (db, promoId) => {
+export const getGlobalRedeemCount = async (db, code) => {
   const [{ total }] = await db
     .select({ total: count() })
     .from(promoRedemptions)
-    .where(eq(promoRedemptions.promoId, promoId));
+    .where(eq(promoRedemptions.code, code));
   return Number(total);
 };
 
-export const getUserRedeemCount = async (db, promoId, userId) => {
+export const getUserRedeemCount = async (db, code, userId) => {
   const [{ total }] = await db
     .select({ total: count() })
     .from(promoRedemptions)
     .where(
       and(
-        eq(promoRedemptions.promoId, promoId),
+        eq(promoRedemptions.code, code),
         eq(promoRedemptions.userId, userId),
       ),
     );
@@ -58,19 +58,19 @@ export const listRedemptions = async (db, { where, limit, offset, page }) => {
   };
 };
 
-export const getPromoUsageStats = async (db, promoId) => {
+export const getPromoUsageStats = async (db, code) => {
   const [{ total }] = await db
     .select({ total: count() })
     .from(promoRedemptions)
-    .where(eq(promoRedemptions.promoId, promoId));
+    .where(eq(promoRedemptions.code, code));
 
   const [{ uniqueUsers }] = await db
     .select({ uniqueUsers: countDistinct(promoRedemptions.userId) })
     .from(promoRedemptions)
-    .where(eq(promoRedemptions.promoId, promoId));
+    .where(eq(promoRedemptions.code, code));
 
   const recent = await db.query.promoRedemptions.findMany({
-    where: eq(promoRedemptions.promoId, promoId),
+    where: eq(promoRedemptions.code, code),
     orderBy: (t, { desc }) => [desc(t.redeemedAt)],
     limit: 10,
     with: { user: { columns: { id: true, email: true } } },

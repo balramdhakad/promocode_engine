@@ -1,7 +1,5 @@
 import express from "express";
 import { errorHandler } from "./middlewares/errorHandler.js";
-import "./infrastructure/db/index.js";
-import "./infrastructure/redis.js";
 import authRoutes from "./modules/auth/auth.routes.js";
 import promoRoutes from "./modules/promoCode/promoCode.routes.js";
 import whitelistRoutes from "./modules/whitelist/whitelist.routes.js";
@@ -18,7 +16,7 @@ import { redis } from "./infrastructure/redis.js";
 import env from "./config/env.js";
 
 const app = express();
-app.use(express.json());
+app.use(express.json({ limit: "10kb" }));
 app.use(express.urlencoded({ extended: true }));
 
 
@@ -50,8 +48,8 @@ app.get("/health", async (req, res) => {
   res.status(statusCode).json(health);
 });
 
-app.use(globalRateLimiter);
 app.use(helmet());
+app.use(globalRateLimiter);
 
 app.use("/api/v1/auth", authRoutes);
 app.use("/api/v1/promo", promoRoutes);

@@ -4,7 +4,7 @@ import * as promoRepo from "../promoCode/promoCode.repository.js";
 
 export const addWhitelistUser = async (db, promoId, userId) => {
   const promo = await promoRepo.findById(db, promoId);
-  if (!promo) throw new NotFoundError("Promo code not found.");
+  if (!promo) throw new NotFoundError("Promo code not found or not active.");
 
   const user = await promoRepo.findUserById(db, userId);
   if (!user) throw new NotFoundError("User not found.");
@@ -16,7 +16,7 @@ export const addWhitelistUser = async (db, promoId, userId) => {
 
 export const removeWhitelistUser = async (db, promoId, userId) => {
   const promo = await promoRepo.findById(db, promoId);
-  if (!promo) throw new NotFoundError("Promo code not found.");
+  if (!promo) throw new NotFoundError("Promo code not found or not active.");
 
   const row = await repo.removeWhitelistUser(db, promoId, userId);
   if (!row) throw new NotFoundError("User is not whitelisted for this promo.");
@@ -25,7 +25,7 @@ export const removeWhitelistUser = async (db, promoId, userId) => {
 
 export const listWhitelistUsers = async (db, promoId) => {
   const promo = await promoRepo.findById(db, promoId);
-  if (!promo) throw new NotFoundError("Promo code not found.");
+  if (!promo) throw new NotFoundError("Promo code not found or not active.");
 
   return repo.listWhitelistUsers(db, promoId);
 };

@@ -1,4 +1,4 @@
-import { NotFoundError, ValidationError } from "../../utils/errors.js";
+import { ValidationError } from "../../utils/errors.js";
 import { DISCOUNT_TYPE, PROMO_STATUS, PROMO_TARGET } from "./PromoCode.constants.js";
 
 const toMinutes = (hhmm) => {

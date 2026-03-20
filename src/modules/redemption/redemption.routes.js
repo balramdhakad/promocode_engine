@@ -13,6 +13,6 @@ const router = Router();
 
 router.get("/", authMiddleware(["admin"]), listRedemptionsValidator, listRedemptions);
 
-router.get("/usage/:promoId", authMiddleware(["admin"]), promoUsageStatsValidator, getPromoUsageStats);
+router.get("/usage/:code", authMiddleware(["admin"]), promoUsageStatsValidator, getPromoUsageStats);
 
 export default router;

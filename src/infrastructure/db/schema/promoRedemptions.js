@@ -1,13 +1,14 @@
 import {
   pgTable,
-  numeric,uuid,
+  numeric,
+  uuid,
+  varchar,
   timestamp,
-  uniqueIndex
-
+  uniqueIndex,
+  index,
 } from "drizzle-orm/pg-core";
 
 import { relations } from "drizzle-orm";
-import { index } from "drizzle-orm/pg-core";
 import { users } from "./user.js";
 import { promoCodes } from "./promoCodes.js";
 import { uuidv7 } from "../helpers/uuid.js";
@@ -25,6 +26,8 @@ export const promoRedemptions = pgTable(
       .references(() => users.id),
     orderId: uuid("order_id").notNull(),
 
+    code: varchar("code", { length: 50 }).notNull(),
+
     discountApplied: numeric("discount_applied", {
       precision: 10,
       scale: 2,
@@ -33,14 +36,14 @@ export const promoRedemptions = pgTable(
     redeemedAt: timestamp("redeemed_at").defaultNow().notNull(),
   },
   (t) => [
-    // Global usage count
-    index("idx_redemptions_promo_id").on(t.promoId),
-
-    // Per-user usage count
-    index("idx_redemptions_promo_user").on(t.promoId, t.userId),
-
     // All redemptions by a user
     index("idx_redemptions_user_id").on(t.userId),
+
+    // usage count by code
+    index("idx_redemptions_code").on(t.code),
+
+    // Per-user usage count by code (cross-version)
+    index("idx_redemptions_code_user").on(t.code, t.userId),
 
     // Prevent double redemption on same order
     uniqueIndex("idx_redemptions_order_id").on(t.orderId),
